@@ -50,7 +50,11 @@ RUN apt update \
 
 COPY bin/  /usr/local/bin/
 COPY docker-entrypoint.sh /docker-entrypoint.sh
-COPY bin/btc_oneshot /docker-entrypoint.sh
+
+
+RUN chmod 755 /docker-entrypoint.sh \
+    && chmod 755 /usr/local/bin/btc_oneshot \
+    && chmod 755 /usr/local/bin/btc_init
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["/btc_oneshot"]
+CMD ["btc_oneshot"]
