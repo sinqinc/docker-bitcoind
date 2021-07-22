@@ -30,7 +30,7 @@ RUN cd /tmp \
 FROM quay.io/sinq/nodejs:lts
 LABEL maintainer="SINQ inc."
 
-ENTRYPOINT ["docker-entrypoint.sh"]
+
 ENV HOME /bitcoin
 EXPOSE 8332 8333
 VOLUME ["/bitcoin/.bitcoin"]
@@ -48,6 +48,9 @@ RUN apt update \
     && apt clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
     && ln -sv /opt/bitcoin/bin/* /usr/local/bin
 
-COPY ./bin ./docker-entrypoint.sh /usr/local/bin/
+COPY bin/  /usr/local/bin/
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+COPY bin/btc_oneshot /docker-entrypoint.sh
 
-CMD ["btc_oneshot"]
+ENTRYPOINT ["/docker-entrypoint.sh"]
+CMD ["/btc_oneshot"]
