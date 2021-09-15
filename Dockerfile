@@ -15,8 +15,9 @@ ARG BITCOIN_CORE_SIGNATURE=01EA5486DE18A882D4C2684590C8019E36C2E964
 
 RUN cd /tmp \
     && wget https://bitcoincore.org/bin/bitcoin-core-${VERSION}/SHA256SUMS.asc \
+    && wget https://bitcoincore.org/bin/bitcoin-core-${VERSION}/SHA256SUMS \
     && gpg --keyserver hkp://keyserver.ubuntu.com --recv-keys ${BITCOIN_CORE_SIGNATURE} \
-    && gpg --verify SHA256SUMS.asc \
+    && gpg --verify SHA256SUMS.asc SHA256SUMS\
     && grep bitcoin-${VERSION}-${ARCH}-linux-gnu.tar.gz SHA256SUMS.asc > SHA25SUM \
     && wget https://bitcoincore.org/bin/bitcoin-core-${VERSION}/bitcoin-${VERSION}-${ARCH}-linux-gnu.tar.gz \
     && sha256sum -c SHA25SUM \
