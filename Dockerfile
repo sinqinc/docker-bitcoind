@@ -2,6 +2,7 @@ FROM ubuntu:latest as builder
 
 RUN apt update \
     && apt install -y --no-install-recommends \
+        python3 \
         ca-certificates \
         wget \
         gnupg \
@@ -9,22 +10,25 @@ RUN apt update \
 
 WORKDIR /tmp
 COPY keys.txt  /tmp/keys.txt
+COPY bin/verify.py  /tmp/verify.py
 
-ARG VERSION=22.0
+ARG VERSION=23.0
 ARG ARCH=x86_64
 ARG BITCOIN_CORE_SIGNATURE=01EA5486DE18A882D4C2684590C8019E36C2E964
 
+RUN cd /tmp && chmod +x verify.py
+
 RUN cd /tmp \
-    && wget https://bitcoincore.org/bin/bitcoin-core-${VERSION}/SHA256SUMS.asc \
-    && wget https://bitcoincore.org/bin/bitcoin-core-${VERSION}/SHA256SUMS \
-    && grep bitcoin-${VERSION}-${ARCH}-linux-gnu.tar.gz SHA256SUMS > SHA25SUM \
-    && gpg --keyserver hkp://keyserver.ubuntu.com --recv-keys ${BITCOIN_CORE_SIGNATURE} \
-    && gpg --refresh-keys --keyserver hkp://keyserver.ubuntu.com \
-    && while read fingerprint keyholder_name; do gpg --keyserver hkp://keyserver.ubuntu.com --recv-keys ${fingerprint}; done < ./keys.txt \
-    && gpg --refresh-keys --keyserver hkp://keyserver.ubuntu.com \
-    && gpg --verify SHA256SUMS.asc SHA256SUMS\
-    && wget https://bitcoincore.org/bin/bitcoin-core-${VERSION}/bitcoin-${VERSION}-${ARCH}-linux-gnu.tar.gz \
-    && sha256sum -c SHA25SUM \
+    && wget https://bitcoincore.org/bin/bitcoin-core-${VERSION}/bitcoin-${VERSION}-${ARCH}-linux-gnu.tar.gz
+RUN cd /tmp \
+    && wget https://bitcoincore.org/bin/bitcoin-core-${VERSION}/SHA256SUMS.asc
+RUN cd /tmp \
+    && wget https://bitcoincore.org/bin/bitcoin-core-${VERSION}/SHA256SUMS
+RUN cd /tmp \
+    && sha256sum --ignore-missing --check SHA256SUMS
+RUN cd /tmp \
+    && gpg --verify SHA256SUMS.asc 2>&1 | grep "using RSA key" | tr -s ' ' | cut -d ' ' -f5 | xargs gpg --keyserver hkps://keyserver.ubuntu.com --recv-keys
+RUN cd /tmp \
     && tar -xzvf bitcoin-${VERSION}-${ARCH}-linux-gnu.tar.gz -C /opt \
     && ln -sv bitcoin-${VERSION} /opt/bitcoin \
     && /opt/bitcoin/bin/test_bitcoin --show_progress \
